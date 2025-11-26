@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Colgate AI Smile Meter</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand-red:#e30000;
+    --bg:#fafafa;
+    --card-bg:#ffffff;
+    --muted:#7a7a7a;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#fff 0%, #f7f7f7 100%);}
+  .page { max-width:420px; margin:18px auto; padding:16px; }
+
+  /* header */
+  .topbar{display:flex;align-items:center;gap:12px;padding:8px 4px;}
+  .logo-wrap{width:64px;height:40px;display:flex;align-items:center;justify-content:flex-start}
+  .brand-logo{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+  .headline{flex:1;padding-left:6px}
+  .headline h1{margin:0;font-size:30px;line-height:1.02;color:#111;font-weight:800}
+  .headline p{margin:6px 0 0;color:var(--muted);font-size:13px}
+
+  /* card */
+  .camera-card{background:var(--card-bg);border-radius:20px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,0.08);position:relative;overflow:visible}
+  .camera-stage{background:#fff;border-radius:16px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;height:320px}
+  .video-frame{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+  .face-frame{position:absolute;left:50%;top:32px;transform:translateX(-50%);width:86%;height:64%;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,0.06);overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center}
+  .face-frame video{width:100%;height:100%;object-fit:cover}
+
+  /* smile arc */
+  .gauge-wrap{position:relative;margin-top:-28px;display:flex;flex-direction:column;align-items:center;gap:6px}
+  .gauge{width:88%;height:92px;overflow:visible}
+  .gauge svg{width:100%;height:100%}
+  .tooth-icon{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(0,0,0,0.08)}
+  .tooth-icon img{width:34px;height:34px;object-fit:contain}
+
+  .gauge-label{font-size:13px;color:var(--muted)}
+
+  /* big CTA */
+  .cta{display:flex;align-items:center;justify-content:center;margin-top:12px}
+  .cta button{background:var(--brand-red);color:#fff;border:none;padding:18px 26px;border-radius:28px;font-size:18px;font-weight:700;box-shadow:0 8px 20px rgba(227,0,0,0.18);cursor:pointer;width:86%}
+  .cta button:disabled{opacity:0.6;cursor:not-allowed;box-shadow:none}
+
+  /* score badge */
+  .score-badge{display:flex;align-items:center;gap:12px;margin-top:18px;background:#fff;padding:12px;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,0.06)}
+  .badge-num{background:var(--brand-red);color:#fff;padding:14px;border-radius:10px;font-weight:800;font-size:20px;width:56px;text-align:center}
+  .badge-text{font-weight:700;font-size:16px}
+  .stats-row{display:flex;gap:10px;margin-top:10px}
+  .stat{flex:1;background:#fff;padding:10px;border-radius:10px;text-align:center;font-size:13px;color:var(--muted);box-shadow:0 6px 16px rgba(0,0,0,0.04)}
+  .message{font-size:13px;color:var(--muted);text-align:center;padding:8px 0}
+
+  /* small screens */
+  @media (max-width:420px){
+    .headline h1{font-size:28px}
+    .camera-stage{height:300px}
+    .cta button{font-size:16px;padding:16px}
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="logo-wrap">
+        <!-- placeholder for Colgate logo: automation will map the local path to a served url -->
+        <img class="brand-logo" src="{{ logo_path }}" alt="Colgate logo">
+      </div>
+      <div class="headline">
+        <h1>Bright Smiles<br>Start Here.</h1>
+        <p>Tap the button and capture your best Colgate smile</p>
+      </div>
+    </div>
+
+    <div class="camera-card">
+      <div class="camera-stage">
+        <div class="face-frame">
+          <video id="video" autoplay playsinline muted></video>
+        </div>
+      </div>      
+      
+      <div class="gauge-wrap" aria-hidden="true">
+        <div class="gauge" id="gauge">
+          <!-- SVG semicircle gauge. JS will update stroke-dashoffset to show score -->
+          <svg viewBox="0 0 200 100" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#ffcccc;stop-opacity:1" />
+                <stop offset="50%" style="stop-color:#ff6666;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#e30000;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <!-- background arc - extended further -->
+            <path d="M5,95 A95,95 0 0,1 195,95" fill="none" stroke="#eee" stroke-width="20" stroke-linecap="round"/>
+            <!-- colored arc (progress) with gradient - extended further -->
+            <path id="gaugeFill" d="M5,95 A95,95 0 0,1 195,95" fill="none" stroke="url(#gaugeGradient)" stroke-width="20" stroke-linecap="round" stroke-dasharray="298.451" stroke-dashoffset="298.451"/>
+          </svg>
+        </div>
+
+        <div class="tooth-icon">
+          <!-- placeholder for tooth icon -->
+          <img src="{{ tooth_path }}" alt="tooth icon">
+        </div>
+
+        <div class="gauge-label">Your Smile Strength</div>
+      </div>
+
+      <div class="cta">
+        <button id="captureBtn" disabled>Tap to Capture<br><small style="opacity:0.95">Your Best Colgate Smile</small></button>
+      </div>
+
+      <div class="score-badge">
+        <div class="badge-num" id="scoreText">0</div>
+        <div>
+          <div class="badge-text">Your Colgate Smile Score</div>
+          <div class="message" id="message">Position your face and smile 🙂</div>
+          <div class="stats-row" style="margin-top:10px">
+            <div class="stat">Attempts: <strong id="attempts">0</strong></div>
+            <div class="stat">Best: <strong id="best">0</strong></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+/* Frontend logic: uses your existing endpoints and behavior.
+   Key changes:
+   - Gauge arc: we use stroke-dashoffset to visually show score 0..100 on semicircle
+   - UI elements IDs kept to match previous JS logic where possible
+*/
+const video = document.getElementById('video');
+const captureBtn = document.getElementById('captureBtn');
+const attemptsEl = document.getElementById('attempts');
+const bestEl = document.getElementById('best');
+const messageEl = document.getElementById('message');
+const scoreText = document.getElementById('scoreText');
+const gaugeFill = document.getElementById('gaugeFill');
+
+let analyzing = false;
+let canCapture = false;
+let lastResponse = null;
+
+// semicircle path length (approximation for arc with radius 90: length = pi*R)
+const ARC_LENGTH = 282.743; // used in SVG dasharray (pre-computed)
+
+async function initCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width:720, height:720 }, audio: false });
+    video.srcObject = stream;
+    await new Promise(r => video.onloadedmetadata = r);
+    startAnalysisLoop();
+    fetchStats();
+  } catch (e) {
+    console.error(e);
+    messageEl.textContent = 'Camera access denied or unavailable.';
+  }
+}
+
+function captureFrameDataURL() {
+  if (!video.videoWidth || !video.videoHeight) return null;
+  const cnv = document.createElement('canvas');
+  cnv.width = video.videoWidth;
+  cnv.height = video.videoHeight;
+  const ctx = cnv.getContext('2d');
+  ctx.drawImage(video, 0, 0, cnv.width, cnv.height);
+  // optional decorative stroke area (not required)
+  return cnv.toDataURL('image/jpeg', 0.9);
+}
+
+async function analyzeFrame() {
+  if (analyzing) return;
+  analyzing = true;
+  const dataUrl = captureFrameDataURL();
+  if (!dataUrl) { analyzing=false; return; }
+  try {
+    const res = await fetch('/analyze-frame', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ image: dataUrl })
+    });
+    const j = await res.json();
+    if (j.error) {
+      messageEl.textContent = j.error;
+    } else {
+      lastResponse = j;
+      const score = j.smile_score || 0;
+      updateGauge(score);
+      scoreText.textContent = score;
+      messageEl.textContent = j.message || '';
+      canCapture = j.can_capture || false;
+      captureBtn.disabled = !can_capture_setting(canCapture);
+      fetchStats();
+    }
+  } catch (e) {
+    console.error(e);
+  }
+  analyzing = false;
+}
+
+// helper for enabling capture button
+function can_capture_setting(flag) {
+  return !!flag;
+}
+
+// update semicircle gauge visually (0 -> hidden, 100 -> fully visible)
+function updateGauge(score) {
+  // clamp 0..100
+  let s = Math.max(0, Math.min(100, Math.round(score)));
+  // compute dashoffset — 0% score => full offset (hidden), 100% => offset 0
+  const offset = ARC_LENGTH * (1 - (s / 100));
+  gaugeFill.style.strokeDashoffset = offset;
+  // animate quickly
+  gaugeFill.style.transition = 'stroke-dashoffset 220ms ease';
+}
+
+function startAnalysisLoop(){
+  // run ~ every 400ms
+  setInterval(() => { analyzeFrame(); }, 400);
+}
+
+captureBtn.addEventListener('click', async () => {
+  captureBtn.disabled = true;
+  const dataUrl = captureFrameDataURL();
+  if (!dataUrl) {
+    messageEl.textContent = 'Camera not ready — try again.';
+    captureBtn.disabled = false;
+    return;
+  }
+  try {
+    const res = await fetch('/capture-photo', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ image: dataUrl })
+    });
+    const j = await res.json();
+    if (j.success) {
+      // automatically trigger the download (works when same-origin)
+      const dl = `/download/${j.photo_id}`;
+      const a = document.createElement('a');
+      a.href = dl;
+      a.download = `colgate_${j.photo_id}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      messageEl.textContent = 'Captured! Your photo should have downloaded.';
+      // update UI with the final score
+      updateGauge(j.smile_score || 0);
+      scoreText.textContent = j.smile_score || 0;
+      fetchStats();
+    } else {
+      messageEl.textContent = j.error || 'Capture failed';
+    }
+  } catch (e) {
+    console.error(e);
+    messageEl.textContent = 'Error capturing photo';
+  } finally {
+    captureBtn.disabled = false;
+  }
+});
+
+async function fetchStats(){
+  try {
+    const res = await fetch('/stats', { credentials: 'include' });
+    const j = await res.json();
+    attemptsEl.textContent = j.attempts || 0;
+    bestEl.textContent = j.highest_score || 0;
+  } catch(e) {}
+}
+
+window.addEventListener('load', initCamera);
+</script>
+</body>
+</html>

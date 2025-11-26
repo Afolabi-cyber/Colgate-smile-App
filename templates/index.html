@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Colgate AI Smile Meter</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand-red:#e30000;
+    --bg:#fafafa;
+    --card-bg:#ffffff;
+    --muted:#7a7a7a;
+    --dark-text: #111;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#fff 0%, #f7f7f7 100%);}
+  .page { max-width:420px; margin:18px auto; padding:16px; }
+
+  /* header */
+  .topbar{display:flex;align-items:center;gap:12px;padding:8px 4px;}
+  .logo-wrap{width:72px;height:44px;display:flex;align-items:center;justify-content:flex-start}
+  .brand-logo{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+  .headline{flex:1;padding-left:6px}
+  .headline h1{margin:0;font-size:32px;line-height:1.05;color:var(--dark-text);font-weight:800}
+  .headline p{margin:6px 0 0;color:var(--muted);font-size:14px}
+
+  /* card */
+  .camera-card{background:var(--card-bg);border-radius:28px;padding:18px;box-shadow:0 12px 40px rgba(0,0,0,0.1);position:relative;overflow:visible}
+  .camera-stage{background:var(--dark-text);border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;height:350px}
+  .video-frame{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+  .face-frame{position:absolute;left:50%;top:50%;transform:translate(-50%, -50%);width:92%;height:92%;border-radius:18px;box-shadow:0 8px 25px rgba(0,0,0,0.1);overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center}
+  .face-frame video{width:100%;height:100%;object-fit:cover}
+
+  /* smile arc */
+  .gauge-wrap{position:relative;margin-top:-38px;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .gauge{width:95%;height:120px;overflow:visible}
+  .gauge svg{width:100%;height:100%}
+  .tooth-icon{position:absolute;top:15px;left:50%;transform:translateX(-50%);width:60px;height:60px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 25px rgba(0,0,0,0.1);border: 4px solid #fff;}
+  .tooth-icon img{width:40px;height:40px;object-fit:contain}
+
+  .gauge-label{font-size:14px;color:var(--muted);font-weight:600;}
+
+  /* Filter selector (Carousel) */
+  .filter-section{margin-top:20px;padding:0 0 10px 0;/* background:#f9f9f9;border-radius:16px */}
+  .filter-section h3{margin:0 0 12px;font-size:16px;font-weight:700;color:var(--dark-text);padding:0 4px}
+  
+  .filter-carousel{
+    display: flex;
+    overflow-x: scroll;
+    padding: 0 4px;
+    gap: 12px;
+    -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+    scrollbar-width: none; /* Firefox */
+  }
+  .filter-carousel::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
+  .filter-btn{
+    flex-shrink: 0; /* Important for carousel items */
+    width: 80px; /* Fixed width for filters */
+    height: 90px;
+    background:#fff;
+    border:2px solid transparent;
+    border-radius:12px;
+    padding:10px 4px;
+    cursor:pointer;
+    transition:all 0.2s;
+    text-align:center;
+    font-size:12px;
+    font-weight:600;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+  }
+  .filter-btn:hover{transform:scale(1.02);}
+  .filter-btn.active{border-color:var(--brand-red);background:#ffebeb;box-shadow:0 4px 12px rgba(227,0,0,0.2);}
+  .filter-icon{font-size:24px;margin-bottom:6px}
+  .filter-name{color:#333}
+
+  /* big CTA */
+  .cta{display:flex;align-items:center;justify-content:center;margin-top:24px}
+  .cta button{background:var(--brand-red);color:#fff;border:none;padding:20px 30px;border-radius:32px;font-size:19px;font-weight:700;box-shadow:0 10px 30px rgba(227,0,0,0.3);cursor:pointer;width:90%;transition: all 0.2s;}
+  .cta button:hover:not(:disabled){transform: translateY(-2px);}
+  .cta button:disabled{opacity:0.6;cursor:not-allowed;box-shadow:none}
+
+  /* score badge */
+  .score-badge{display:flex;align-items:center;gap:16px;margin-top:24px;background:#fefefe;padding:16px;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,0.08);border: 1px solid #eee}
+  .badge-num{background:var(--brand-red);color:#fff;padding:16px;border-radius:12px;font-weight:800;font-size:24px;width:64px;text-align:center;box-shadow:0 4px 10px rgba(227,0,0,0.2)}
+  .badge-text{font-weight:800;font-size:18px;color:var(--dark-text)}
+  .stats-row{display:flex;gap:12px;margin-top:12px}
+  .stat{flex:1;background:#fff;padding:12px;border-radius:12px;text-align:center;font-size:14px;color:var(--muted);box-shadow:0 4px 10px rgba(0,0,0,0.04)}
+  .stat strong{color:var(--dark-text)}
+  .message{font-size:14px;color:var(--brand-red);text-align:left;padding:4px 0;font-weight:600}
+
+  /* small screens adjustments */
+  @media (max-width:420px){
+    .headline h1{font-size:30px}
+    .camera-stage{height:320px}
+    .cta button{font-size:18px;padding:18px}
+    .filter-btn{width:70px; height:80px; font-size:11px; padding:8px 4px}
+    .filter-icon{font-size:22px}
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="logo-wrap">
+        <img class="brand-logo" src="{{ logo_path }}" alt="Colgate logo">
+      </div>
+      <div class="headline">
+        <h1>Bright Smiles<br>Start Here.</h1>
+        <p>Tap the button and capture your best Colgate smile</p>
+      </div>
+    </div>
+
+    <div class="camera-card">
+      <div class="camera-stage">
+        <div class="face-frame">
+          <video id="video" autoplay playsinline muted></video>
+        </div>
+      </div>      
+      
+      <div class="gauge-wrap" aria-hidden="true">
+        <div class="gauge" id="gauge">
+          <svg viewBox="0 0 200 100" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#ffcccc;stop-opacity:1" />
+                <stop offset="50%" style="stop-color:#ff6666;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#e30000;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <path d="M5,95 A95,95 0 0,1 195,95" fill="none" stroke="#eee" stroke-width="20" stroke-linecap="round"/>
+            <path id="gaugeFill" d="M5,95 A95,95 0 0,1 195,95" fill="none" stroke="url(#gaugeGradient)" stroke-width="20" stroke-linecap="round" stroke-dasharray="298.451" stroke-dashoffset="298.451"/>
+          </svg>
+        </div>
+
+        <div class="tooth-icon">
+          <img src="{{ tooth_path }}" alt="tooth icon">
+        </div>
+
+        <div class="gauge-label">Your Smile Strength</div>
+      </div>
+
+      <div class="filter-section">
+        <h3>✨ Choose Your Filter</h3>
+        <div class="filter-carousel" id="filterGrid">
+          <button class="filter-btn active" data-filter="none">
+            <div class="filter-icon">📷</div>
+            <div class="filter-name">Original</div>
+          </button>
+          <button class="filter-btn" data-filter="brighten">
+            <div class="filter-icon">☀️</div>
+            <div class="filter-name">Bright</div>
+          </button>
+          <button class="filter-btn" data-filter="contrast">
+            <div class="filter-icon">🔆</div>
+            <div class="filter-name">Contrast</div>
+          </button>
+          <button class="filter-btn" data-filter="warm">
+            <div class="filter-icon">🔥</div>
+            <div class="filter-name">Warm</div>
+          </button>
+          <button class="filter-btn" data-filter="cool">
+            <div class="filter-icon">❄️</div>
+            <div class="filter-name">Cool</div>
+          </button>
+          <button class="filter-btn" data-filter="vintage">
+            <div class="filter-icon">📼</div>
+            <div class="filter-name">Vintage</div>
+          </button>
+          <button class="filter-btn" data-filter="saturate">
+            <div class="filter-icon">🌈</div>
+            <div class="filter-name">Vibrant</div>
+          </button>
+          <button class="filter-btn" data-filter="dreamy">
+            <div class="filter-icon">☁️</div>
+            <div class="filter-name">Dreamy</div>
+          </button>
+          <button class="filter-btn" data-filter="dramatic">
+            <div class="filter-icon">⚡</div>
+            <div class="filter-name">Drama</div>
+          </button>
+          <button class="filter-btn" data-filter="sunset">
+            <div class="filter-icon">🌅</div>
+            <div class="filter-name">Sunset</div>
+          </button>
+          <button class="filter-btn" data-filter="sepia">
+            <div class="filter-icon">🟤</div>
+            <div class="filter-name">Sepia</div>
+          </button>
+          <button class="filter-btn" data-filter="grayscale">
+            <div class="filter-icon">⚫</div>
+            <div class="filter-name">B&W</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="score-badge">
+        <div class="badge-num" id="scoreText">0</div>
+        <div>
+          <div class="badge-text">Your Colgate Smile Score</div>
+          <div class="message" id="message">Position your face and smile 🙂</div>
+          <div class="stats-row" style="margin-top:10px">
+            <div class="stat">Attempts: <strong id="attempts">0</strong></div>
+            <div class="stat">Best: <strong id="best">0</strong></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="cta">
+        <button id="captureBtn" disabled>Tap to Capture<br><small style="opacity:0.95">Your Best Colgate Smile</small></button>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+const video = document.getElementById('video');
+const captureBtn = document.getElementById('captureBtn');
+const attemptsEl = document.getElementById('attempts');
+const bestEl = document.getElementById('best');
+const messageEl = document.getElementById('message');
+const scoreText = document.getElementById('scoreText');
+const gaugeFill = document.getElementById('gaugeFill');
+const filterGrid = document.getElementById('filterGrid');
+
+let analyzing = false;
+let canCapture = false;
+let lastResponse = null;
+let selectedFilter = 'none';
+
+// semicircle path length (updated for radius 95)
+const ARC_LENGTH = 298.451;
+
+// Initialize gauge fill on page load
+function initGauge() {
+  gaugeFill.style.strokeDasharray = ARC_LENGTH;
+  gaugeFill.style.strokeDashoffset = ARC_LENGTH;
+  gaugeFill.style.transition = 'stroke-dashoffset 300ms ease-out';
+}
+
+async function initCamera() {
+  initGauge();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width:720, height:720 }, audio: false });
+    video.srcObject = stream;
+    await new Promise(r => video.onloadedmetadata = r);
+    startAnalysisLoop();
+    fetchStats();
+  } catch (e) {
+    console.error(e);
+    messageEl.textContent = 'Camera access denied or unavailable.';
+    messageEl.style.color = 'var(--muted)';
+  }
+}
+
+function captureFrameDataURL() {
+  if (!video.videoWidth || !video.videoHeight) return null;
+  const cnv = document.createElement('canvas');
+  cnv.width = video.videoWidth;
+  cnv.height = video.videoHeight;
+  const ctx = cnv.getContext('2d');
+  ctx.drawImage(video, 0, 0, cnv.width, cnv.height);
+  return cnv.toDataURL('image/jpeg', 0.9);
+}
+
+async function analyzeFrame() {
+  if (analyzing) return;
+  analyzing = true;
+  const dataUrl = captureFrameDataURL();
+  if (!dataUrl) { analyzing=false; return; }
+  try {
+    const res = await fetch('/analyze-frame', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ image: dataUrl })
+    });
+    const j = await res.json();
+    if (j.error) {
+      messageEl.textContent = j.error;
+      messageEl.style.color = 'var(--muted)';
+    } else {
+      lastResponse = j;
+      const score = j.smile_score || 0;
+      updateGauge(score);
+      scoreText.textContent = score;
+      messageEl.textContent = j.message || '';
+      messageEl.style.color = j.can_capture ? 'green' : 'var(--brand-red)';
+      canCapture = j.can_capture || false;
+      captureBtn.disabled = !canCapture;
+      fetchStats();
+    }
+  } catch (e) {
+    console.error(e);
+    messageEl.textContent = 'Connection error.';
+    messageEl.style.color = 'var(--muted)';
+  }
+  analyzing = false;
+}
+
+// update semicircle gauge visually
+function updateGauge(score) {
+  let s = Math.max(0, Math.min(100, Math.round(score)));
+  const offset = ARC_LENGTH - (ARC_LENGTH * (s / 100));
+  gaugeFill.style.strokeDashoffset = offset;
+}
+
+function startAnalysisLoop(){
+  // Analyze every 400ms
+  setInterval(() => { analyzeFrame(); }, 400);
+}
+
+// Filter selection
+filterGrid.addEventListener('click', (e) => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  
+  // Update active state
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  // Update selected filter
+  selectedFilter = btn.dataset.filter;
+});
+
+captureBtn.addEventListener('click', async () => {
+  captureBtn.disabled = true;
+  messageEl.textContent = 'Processing photo...';
+  messageEl.style.color = 'var(--muted)';
+
+  const dataUrl = captureFrameDataURL();
+  if (!dataUrl) {
+    messageEl.textContent = 'Camera not ready — try again.';
+    messageEl.style.color = 'var(--brand-red)';
+    captureBtn.disabled = false;
+    return;
+  }
+  try {
+    const res = await fetch('/capture-photo', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ 
+        image: dataUrl,
+        filter: selectedFilter  // Send selected filter
+      })
+    });
+    const j = await res.json();
+    if (j.success) {
+      // automatically trigger the download
+      const dl = `/download/${j.photo_id}`;
+      const a = document.createElement('a');
+      a.href = dl;
+      a.download = `colgate_${j.photo_id}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      messageEl.textContent = 'Captured! Your photo should have downloaded.';
+      messageEl.style.color = 'green';
+      updateGauge(j.smile_score || 0);
+      scoreText.textContent = j.smile_score || 0;
+      fetchStats();
+    } else {
+      messageEl.textContent = j.error || 'Capture failed';
+      messageEl.style.color = 'var(--brand-red)';
+    }
+  } catch (e) {
+    console.error(e);
+    messageEl.textContent = 'Error capturing photo';
+    messageEl.style.color = 'var(--brand-red)';
+  } finally {
+    // Only re-enable if quality checks pass on the last analysis cycle
+    captureBtn.disabled = !canCapture; 
+  }
+});
+
+async function fetchStats(){
+  try {
+    const res = await fetch('/stats', { credentials: 'include' });
+    const j = await res.json();
+    attemptsEl.textContent = j.attempts || 0;
+    bestEl.textContent = j.highest_score || 0;
+  } catch(e) {}
+}
+
+window.addEventListener('load', initCamera);
+</script>
+</body>
+</html>
