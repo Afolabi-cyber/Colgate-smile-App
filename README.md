@@ -34,3 +34,4 @@ It uses **OpenCV**, **Mediapipe**, and **Pillow** to detect facial landmarks, is
 ```bash
 git clone https://github.com/Afolabi-cyber/Colgate-smile-App.git
 cd Colgate-smile-App
+pip install -r requirements.txt
